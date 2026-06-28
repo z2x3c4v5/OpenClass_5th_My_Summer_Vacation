@@ -330,6 +330,31 @@
     saveSeating(); renderSeating();
   }
 
+  // 자리 한 칸 내용: 이름 + 진행도 + 선택한 문장 4개(현재 연습 중인 문장 강조)
+  function seatInner(uid, st) {
+    const s = students[uid] || {};
+    const sel = s.selected || [];
+    const cur = (s.liveState && s.liveState.currentSentence) || "";
+    const done = sel.length >= TARGET_SENTENCES;
+    let html = '<div class="seat-head"><span class="seat-name">' + esc(st.label || "") + "</span>" +
+      '<span class="seat-badge' + (done ? " done" : "") + '">' +
+      (done ? "⭐ " : "✏️ ") + sel.length + "/" + TARGET_SENTENCES + "</span></div>";
+    if (sel.length) {
+      html += '<div class="seat-sents">';
+      sel.slice(0, TARGET_SENTENCES).forEach(it => {
+        const now = cur && it.en === cur;
+        const ic = it.type === "combo" ? "🧩" : "🙋";
+        html += '<div class="seat-sent' + (now ? " now" : "") + '">' +
+          (now ? "▶ " : "") + ic + " " + esc(it.en) + "</div>";
+      });
+      html += "</div>";
+    } else {
+      html += '<div class="seat-sub">' +
+        esc(st.k === "offline" ? "오프라인" : (st.sub || "문장 선택 전")) + "</div>";
+    }
+    return html;
+  }
+
   function renderSeating() {
     const grid = $("seating-grid");
     if (!grid) return;
@@ -341,18 +366,16 @@
         const st = uid ? statusOf(uid) : { k: "empty", label: "빈 자리" };
         const cell = document.createElement(editMode ? "div" : "button");
         cell.className = "seat seat-" + st.k + (editMode ? " editing" : "");
-        cell.innerHTML = '<div class="seat-name">' + esc(st.label || "") + "</div>" +
-          (st.sub ? '<div class="seat-sub">' + esc(st.sub) + "</div>" : "");
 
-        // 선택한 문장 진행도 (✏️ N/4), 다 채우면 ⭐ + 강조
-        if (uid && !editMode) {
+        if (editMode) {
+          cell.innerHTML = '<div class="seat-name">' +
+            esc(uid ? (students[uid].name || "학생") : "빈 자리") + "</div>";
+        } else if (uid) {
+          cell.innerHTML = seatInner(uid, st);
           const sc = (students[uid] && students[uid].selected) ? students[uid].selected.length : 0;
-          const done = sc >= TARGET_SENTENCES;
-          if (done) cell.classList.add("seat-complete");
-          const badge = document.createElement("div");
-          badge.className = "seat-badge" + (done ? " done" : "");
-          badge.textContent = (done ? "⭐ " : "✏️ ") + sc + "/" + TARGET_SENTENCES;
-          cell.appendChild(badge);
+          if (sc >= TARGET_SENTENCES) cell.classList.add("seat-complete");
+        } else {
+          cell.innerHTML = '<div class="seat-name">빈 자리</div>';
         }
 
         if (editMode) {
@@ -428,6 +451,9 @@
     const seat = v === "seat";
     $("seating-view").style.display = seat ? "" : "none";
     $("list-view").style.display = seat ? "none" : "";
+    // 실시간 활동 피드는 '목록' 보기에서만 (자리뷰는 꽉 차게)
+    if ($("feed-col")) $("feed-col").style.display = seat ? "none" : "";
+    document.body.classList.toggle("seat-mode", seat);
     $("view-seat").classList.toggle("active", seat);
     $("view-list").classList.toggle("active", !seat);
   }
@@ -442,11 +468,7 @@
     bind("seat-clear", () => { seating.seats = {}; saveSeating(); renderSeating(); });
     bind("view-seat", () => switchView("seat"));
     bind("view-list", () => switchView("list"));
-    bind("feed-toggle", () => {
-      const hidden = document.body.classList.toggle("feed-hidden");
-      const b = $("feed-toggle");
-      if (b) b.textContent = hidden ? "⚡ 활동 보기" : "⚡ 활동 숨기기";
-    });
+    switchView("seat");   // 기본은 자리 보기(피드 숨김)
     renderSeating();
   }
   initSeating();
