@@ -45,6 +45,8 @@
   /* ---------------- 실시간 데이터 ---------------- */
   const students = {};            // uid -> data
   let detailUnsubs = [];
+  const feedEvents = {};          // uid -> 최근 이벤트 배열
+  const feedUnsubs = {};          // uid -> 구독 해제 함수
 
   function start() {
     db.collection("students").onSnapshot(snap => {
@@ -52,16 +54,40 @@
       // 삭제된 학생 정리
       const ids = new Set(snap.docs.map(d => d.id));
       Object.keys(students).forEach(id => { if (!ids.has(id)) delete students[id]; });
+      syncFeedListeners(ids);
       renderGrid();
       renderSummary();
     }, err => console.warn("students:", err));
+  }
 
-    db.collectionGroup("events").orderBy("ts", "desc").limit(80).onSnapshot(snap => {
-      renderFeed(snap.docs);
-    }, err => {
-      $("feed").innerHTML = '<div class="feed-err">활동 피드를 불러오려면 색인(index)이 필요할 수 있어요.<br>' +
-        '브라우저 콘솔(F12)에 나오는 링크를 눌러 색인을 만들어 주세요.<br><small>' + (err.message || err) + '</small></div>';
+  // 학생마다 자기 events 하위 컬렉션을 구독해서 합칩니다.
+  // (컬렉션 그룹 쿼리를 안 써서 별도 색인이 필요 없음)
+  function syncFeedListeners(ids) {
+    ids.forEach(uid => {
+      if (feedUnsubs[uid]) return;
+      feedUnsubs[uid] = db.collection("students").doc(uid).collection("events")
+        .orderBy("ts", "desc").limit(25)
+        .onSnapshot(s => {
+          feedEvents[uid] = s.docs.map(d => Object.assign({ uid: uid }, d.data()));
+          renderFeedMerged();
+        }, e => { /* 무시 */ });
     });
+    // 사라진 학생 구독 정리
+    Object.keys(feedUnsubs).forEach(uid => {
+      if (!ids.has(uid)) {
+        try { feedUnsubs[uid](); } catch (e) {}
+        delete feedUnsubs[uid];
+        delete feedEvents[uid];
+      }
+    });
+  }
+
+  function renderFeedMerged() {
+    const all = [];
+    Object.keys(feedEvents).forEach(uid => { (feedEvents[uid] || []).forEach(ev => all.push(ev)); });
+    all.sort((a, b) =>
+      ((b.ts && b.ts.toMillis ? b.ts.toMillis() : 0) - (a.ts && a.ts.toMillis ? a.ts.toMillis() : 0)));
+    renderFeed(all.slice(0, 80));
   }
 
   /* ---------------- 접속 여부 ---------------- */
@@ -134,13 +160,12 @@
     }
   }
 
-  function renderFeed(docs) {
+  function renderFeed(events) {
     const feed = $("feed");
-    if (!docs.length) { feed.innerHTML = '<p class="dash-empty">아직 활동이 없어요.</p>'; return; }
+    if (!events.length) { feed.innerHTML = '<p class="dash-empty">아직 활동이 없어요.</p>'; return; }
     feed.innerHTML = "";
-    docs.forEach(d => {
-      const ev = d.data();
-      const uid = d.ref.parent.parent.id;
+    events.forEach(ev => {
+      const uid = ev.uid;
       const name = (students[uid] && students[uid].name) || "학생";
       const row = document.createElement("div");
       row.className = "feed-row";
