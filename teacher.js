@@ -330,25 +330,36 @@
     saveSeating(); renderSeating();
   }
 
-  // 자리 한 칸 내용: 이름 + 진행도 + 선택한 문장 4개(현재 연습 중인 문장 강조)
+  // 자리 한 칸 내용: 이름 + 진행도 + (지금 듣는 문장) + 선택한 문장 4개(정확도·횟수)
   function seatInner(uid, st) {
     const s = students[uid] || {};
     const sel = s.selected || [];
     const cur = (s.liveState && s.liveState.currentSentence) || "";
     const done = sel.length >= TARGET_SENTENCES;
+    const inSel = sel.some(it => it.en === cur);
+
     let html = '<div class="seat-head"><span class="seat-name">' + esc(st.label || "") + "</span>" +
       '<span class="seat-badge' + (done ? " done" : "") + '">' +
       (done ? "⭐ " : "✏️ ") + sel.length + "/" + TARGET_SENTENCES + "</span></div>";
+
+    // 지금 듣는/하는 문장 — 선택목록에 없을 때만 따로(단일·교체)
+    if (cur && !inSel) {
+      html += '<div class="seat-now">▶ 🔊 ' + esc(cur) + "</div>";
+    }
+
     if (sel.length) {
       html += '<div class="seat-sents">';
       sel.slice(0, TARGET_SENTENCES).forEach(it => {
         const now = cur && it.en === cur;
         const ic = it.type === "combo" ? "🧩" : "🙋";
+        const att = it.attempts || 0;
+        const acc = att ? ((it.avg != null ? it.avg : it.best) || 0) + "%" : "—";
         html += '<div class="seat-sent' + (now ? " now" : "") + '">' +
-          (now ? "▶ " : "") + ic + " " + esc(it.en) + "</div>";
+          '<span class="ss-text">' + (now ? "▶ " : "") + ic + " " + esc(it.en) + "</span>" +
+          '<span class="ss-stat">' + att + "회·" + acc + "</span></div>";
       });
       html += "</div>";
-    } else {
+    } else if (!cur) {
       html += '<div class="seat-sub">' +
         esc(st.k === "offline" ? "오프라인" : (st.sub || "문장 선택 전")) + "</div>";
     }
