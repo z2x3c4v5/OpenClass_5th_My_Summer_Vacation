@@ -41,6 +41,7 @@
     <button class="tab-btn" data-tab="words">📅 때·장소·누구와</button>
     <button class="tab-btn" data-tab="build">🧩 문장 만들기</button>
     <button class="tab-btn" data-tab="practice">🎤 내 문장 연습 <span id="practice-count" class="tab-count">0</span></button>
+    <button class="tab-btn" data-tab="challenge">🚀 도전 미션</button>
   </nav>
 
   <div class="toolbar">
@@ -137,6 +138,18 @@
           아직 담은 문장이 없어요! <b>할 일 말하기</b>나 <b>문장 만들기</b> 탭에서 <b>⭐</b>로 연습할 문장을 담아보세요.
         </p>
         <div id="practice-list" class="card-grid practice-grid"></div>
+      </div>
+    </section>
+
+    <!-- ===== 🚀 도전 미션 (심화) ===== -->
+    <section id="tab-challenge" class="tab-panel">
+      <div class="section-block">
+        <h2>🚀 도전 미션 <span class="count">심화</span></h2>
+        <p class="hint">나만의 문장 <b>4개</b>를 다 만든 친구들의 다음 단계! <b>and</b>(그리고)로 두 가지를 잇거나, <b>because</b>(왜냐하면)로 이유를 붙인 <b>더 긴 문장</b>에 도전해요. ⭐로 담아 연습할 수 있어요.</p>
+        <p id="challenge-lock" class="practice-empty">
+          🔒 먼저 <b>문장 만들기</b>에서 <b>나만의 문장 4개</b>를 ⭐로 연습 목록에 담으면 도전 미션이 열려요!
+        </p>
+        <div id="challenge-grid" class="card-grid five"></div>
       </div>
     </section>
   </main>

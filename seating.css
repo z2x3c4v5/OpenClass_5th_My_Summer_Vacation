@@ -115,6 +115,13 @@ body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
 }
 @keyframes nowBlink { 0%,100% { opacity: 1; } 50% { opacity: .68; } }
 
+/* 🚀 심화 도전 중 */
+.seat-chal {
+  margin-top: 6px; font-size: 0.72rem; font-weight: 800;
+  color: #6d28d9; background: #ede9fe; padding: 2px 8px; border-radius: 9px;
+  display: inline-block; align-self: flex-start;
+}
+
 /* 자리 안 선택 문장 목록 (정확도·횟수 포함) */
 .seat-sents { margin-top: 7px; display: flex; flex-direction: column; gap: 3px; }
 .seat-sent {
