@@ -10,12 +10,13 @@
  *    실제 보호는 firestore.rules(보안 규칙)가 합니다.
  * ============================================================ */
 window.FIREBASE_CONFIG = {
-  apiKey:            "여기에_apiKey_붙여넣기",
+  apiKey:            "AIzaSyB1_HHA7skhEBrTDsbPuYtQPSop0Dympy8",
   authDomain:        "openclassforsummervacation.firebaseapp.com",
   projectId:         "openclassforsummervacation",
-  storageBucket:     "openclassforsummervacation.appspot.com",
-  messagingSenderId: "여기에_messagingSenderId_붙여넣기",
-  appId:             "여기에_appId_붙여넣기"
+  storageBucket:     "openclassforsummervacation.firebasestorage.app",
+  messagingSenderId: "236981046863",
+  appId:             "1:236981046863:web:75741d86bbbdf5483ba43a",
+  measurementId:     "G-V5P4J3VSVN"
 };
 
 /* 대시보드(학생 현황)를 볼 수 있는 관리자(선생님) 구글 계정.
