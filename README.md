@@ -61,6 +61,23 @@
 > 브라우저 콘솔(F12)에 뜨는 링크를 한 번 눌러 색인을 만들면(`events` 컬렉션 그룹의
 > `ts` 내림차순) 이후로는 바로 보입니다.
 
+## 🚀 배포 (Firebase Hosting · 무료)
+
+정적 사이트라 무료(Spark) 티어로 충분합니다. 배포 주소(`*.web.app`)는
+구글 로그인 승인 도메인에 자동 등록되어 별도 설정이 필요 없습니다.
+
+```bash
+npm install -g firebase-tools      # 최초 1회
+firebase login                     # 관리자 구글 계정으로
+firebase deploy                    # 호스팅 + 보안 규칙 함께 배포
+```
+
+- `.firebaserc` 의 `default` 프로젝트 ID가 실제 프로젝트 ID와 같은지 확인하세요.
+  (Firebase 콘솔 → ⚙️ 프로젝트 설정 → "프로젝트 ID". 보통 소문자이며 끝에 임의
+  문자열이 붙기도 합니다. 다르면 `.firebaserc` 값을 그 ID로 바꿔주세요.)
+- `firebase deploy --only hosting` / `--only firestore:rules` 로 따로 배포도 가능합니다.
+- 배포 후 학생: `https://<프로젝트ID>.web.app` / 선생님: `.../teacher.html`
+
 ### 무엇이 기록되나
 탭 이동 · 난이도/분류 변경 · 단어 뜻 찾기 · 문장 듣기 · 문장 조합(올바른/어색한) ·
 연습목록 담기/빼기 · 발음 연습 정확도(최고/최근/횟수). 모든 기록은 학생 본인과
