@@ -471,3 +471,18 @@ const WORD_MEANINGS = {
   "share": "나누다, 함께 쓰다",
   "in": "~안에, ~에",
 };
+
+/* =========================================================
+ * 🚀 도전 미션 (심화) — 나만의 문장 4개를 완성한 학생이 푸는 더 어려운 문장
+ *  - and 로 두 활동 잇기 / because 로 이유 붙이기 / 길게 늘이기
+ * ========================================================= */
+const CHALLENGE_SENTENCES = [
+  { en: "I'll go to the beach and swim with my friends.", ko: "나는 해변에 가서 친구들과 수영할 거야.", emoji: "🏖️", imgPrompt: "kids swimming at the beach with friends in summer" },
+  { en: "I'll read many books because I love stories.", ko: "나는 이야기를 좋아해서 책을 많이 읽을 거야.", emoji: "📚", imgPrompt: "a happy child reading many storybooks" },
+  { en: "I'll join a science camp and learn about robots.", ko: "나는 과학 캠프에 참여해서 로봇에 대해 배울 거야.", emoji: "🤖", imgPrompt: "kids learning about robots at a science camp" },
+  { en: "I'll grow tomatoes and water them every day.", ko: "나는 토마토를 길러서 매일 물을 줄 거야.", emoji: "🍅", imgPrompt: "a child watering tomato plants in a garden" },
+  { en: "I'll visit my grandpa and help him on the farm.", ko: "나는 할아버지를 찾아가서 농장 일을 도울 거야.", emoji: "👴", imgPrompt: "a child helping grandpa on a farm in summer" },
+  { en: "I'll learn taekwondo because I want to be strong.", ko: "나는 강해지고 싶어서 태권도를 배울 거야.", emoji: "🥋", imgPrompt: "a kid practicing taekwondo, strong and happy" },
+  { en: "I'll go to a water park and ride the big slide.", ko: "나는 워터파크에 가서 큰 미끄럼틀을 탈 거야.", emoji: "🛝", imgPrompt: "kids riding a big water slide at a water park" },
+  { en: "I'll make a photo book to remember my summer.", ko: "나는 여름을 기억하려고 사진 책을 만들 거야.", emoji: "📸", imgPrompt: "a child making a summer photo book with pictures" }
+];

@@ -432,6 +432,7 @@ function toggleSelect(item, type) {
   persist();
   updatePracticeBadge();
   renderSuggestions();
+  renderChallenge();
   if (document.getElementById("tab-practice").classList.contains("active")) renderPractice();
 }
 function updatePracticeBadge() {
@@ -633,6 +634,27 @@ function renderPractice() {
   updatePracticeBadge();
 }
 
+/* ---------- 🚀 도전 미션 (심화) ---------- */
+function comboCount() {
+  let n = 0;
+  selected.forEach(v => { if (v.type === "combo") n++; });
+  return n;
+}
+function renderChallenge() {
+  const lock = document.getElementById("challenge-lock");
+  const grid = document.getElementById("challenge-grid");
+  if (!grid) return;
+  if (comboCount() < 4) {                 // 나만의 문장 4개 완성 전: 잠금
+    if (lock) lock.style.display = "block";
+    grid.innerHTML = "";
+    return;
+  }
+  if (lock) lock.style.display = "none";
+  const view = (typeof CHALLENGE_SENTENCES !== "undefined" ? CHALLENGE_SENTENCES : [])
+    .map(it => Object.assign({}, it));
+  renderGrid("challenge-grid", view, { tones: true, selectable: true, selectType: "challenge" });
+}
+
 /* ---------- 초기 렌더 ---------- */
 renderSuggestions();
 renderGrid("day-grid", DAY_EXPRESSIONS, { tones: true, noIndex: true });
@@ -641,6 +663,7 @@ renderGrid("with-grid", WITH_EXPRESSIONS, { tones: true, noIndex: true });
 renderBuilder();
 updateBuildResult();
 updatePracticeBadge();
+renderChallenge();
 
 /* ---------- 탭 전환 ---------- */
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -654,6 +677,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     synth.cancel();
     hidePopup();
     if (btn.dataset.tab === "practice") renderPractice();
+    if (btn.dataset.tab === "challenge") renderChallenge();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 });

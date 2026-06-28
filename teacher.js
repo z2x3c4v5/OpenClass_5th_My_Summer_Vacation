@@ -128,7 +128,7 @@
   }
 
   /* ---------------- 학생 카드 그리드 ---------------- */
-  const TAB_NAMES = { suggest: "할 일 말하기", words: "때·장소", build: "문장 만들기", practice: "내 문장 연습" };
+  const TAB_NAMES = { suggest: "할 일 말하기", words: "때·장소", build: "문장 만들기", practice: "내 문장 연습", challenge: "🚀 도전 미션" };
   const LVL = { beginner: "초급", intermediate: "중급", advanced: "고급" };
 
   function renderGrid() {
@@ -350,6 +350,11 @@
     let html = '<div class="seat-head"><span class="seat-name">' + esc(st.label || "") + "</span>" +
       '<span class="seat-badge' + (done ? " done" : "") + '">' +
       (done ? "⭐ " : "✏️ ") + sel.length + "/" + TARGET_SENTENCES + "</span></div>";
+
+    // 🚀 심화(도전 미션) 진행 중 표시
+    if (s.liveState && s.liveState.tab === "challenge") {
+      html += '<div class="seat-chal">🚀 심화 도전 중</div>';
+    }
 
     // 지금 듣는/하는 문장 — 선택목록에 없을 때만 따로(단일·교체)
     if (cur && !inSel) {
