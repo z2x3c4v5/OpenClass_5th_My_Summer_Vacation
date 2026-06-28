@@ -48,6 +48,16 @@
   const feedEvents = {};          // uid -> 최근 이벤트 배열
   const feedUnsubs = {};          // uid -> 구독 해제 함수
 
+  // 🪑 자리 배치 상태 (이 브라우저에 저장 → Firebase 불필요)
+  let seating = loadSeating();
+  let editMode = false, dragUid = null, selectUid = null;
+  function defSeating() { return { rows: 4, cols: 5, seats: {} }; }
+  function loadSeating() {
+    try { return Object.assign(defSeating(), JSON.parse(localStorage.getItem("seating_v1") || "null") || {}); }
+    catch (e) { return defSeating(); }
+  }
+  function saveSeating() { try { localStorage.setItem("seating_v1", JSON.stringify(seating)); } catch (e) {} }
+
   function start() {
     db.collection("students").onSnapshot(snap => {
       snap.forEach(d => { students[d.id] = d.data(); });
@@ -57,6 +67,7 @@
       syncFeedListeners(ids);
       renderGrid();
       renderSummary();
+      renderSeating();
     }, err => console.warn("students:", err));
   }
 
@@ -88,6 +99,7 @@
     all.sort((a, b) =>
       ((b.ts && b.ts.toMillis ? b.ts.toMillis() : 0) - (a.ts && a.ts.toMillis ? a.ts.toMillis() : 0)));
     renderFeed(all.slice(0, 80));
+    renderSeating();
   }
 
   /* ---------------- 접속 여부 ---------------- */
@@ -244,6 +256,156 @@
     return Math.round(hr / 24) + "일 전";
   }
 
-  // 1초마다 상대시간/접속표시 갱신
-  setInterval(() => { if (started) { renderGrid(); renderSummary(); } }, 5000);
+  /* ---------------- 🪑 자리 배치 뷰 ---------------- */
+  function scoreOf(ev) { return ev && ev.payload && ev.payload.score != null ? ev.payload.score : 0; }
+
+  // 학생 1명의 현재 상태 판정 (색상/문구)
+  function statusOf(uid) {
+    const s = students[uid];
+    if (!s) return { k: "empty", label: "빈 자리" };
+    if (!isOnline(s)) return { k: "offline", label: s.name || "학생", sub: "오프라인" };
+
+    const evs = feedEvents[uid] || [];
+    const practices = evs.filter(e => e.type === "practice_attempt");
+    const live = s.liveState || {};
+    const actSec = live.lastAt && live.lastAt.toMillis ? (nowMs() - live.lastAt.toMillis()) / 1000 : 9999;
+
+    // 도움 필요: 최근 연습 3회 모두 50% 미만 / 접속 중이나 90초+ 아무 조작 없음
+    const low3 = practices.length >= 3 && practices.slice(0, 3).every(p => scoreOf(p) < 50);
+    if (low3 || actSec > 90) return { k: "struggling", label: s.name || "학생", sub: "도움 필요" };
+
+    const lastP = practices[0];
+    if (lastP) {
+      const sc = scoreOf(lastP);
+      const pSec = lastP.ts && lastP.ts.toMillis ? (nowMs() - lastP.ts.toMillis()) / 1000 : 9999;
+      if (pSec < 90) {
+        if (sc >= 75) return { k: "success", label: s.name || "학생", sub: sc + "% 정답" };
+        if (sc < 45)  return { k: "fail",    label: s.name || "학생", sub: sc + "% 오답" };
+        return { k: "ok", label: s.name || "학생", sub: sc + "%" };
+      }
+    }
+    return { k: "ok", label: s.name || "학생", sub: live.tab ? (TAB_NAMES[live.tab] || live.tab) : "학습 중" };
+  }
+
+  function seatKey(r, c) { return r + "-" + c; }
+  function seatedUids() { return new Set(Object.values(seating.seats).filter(Boolean)); }
+
+  function assignSeat(uid, r, c) {
+    Object.keys(seating.seats).forEach(k => { if (seating.seats[k] === uid) delete seating.seats[k]; });
+    seating.seats[seatKey(r, c)] = uid;
+    dragUid = null; selectUid = null;
+    saveSeating(); renderSeating();
+  }
+  function unassign(uid) {
+    Object.keys(seating.seats).forEach(k => { if (seating.seats[k] === uid) delete seating.seats[k]; });
+    saveSeating(); renderSeating();
+  }
+
+  function renderSeating() {
+    const grid = $("seating-grid");
+    if (!grid) return;
+    grid.style.gridTemplateColumns = "repeat(" + seating.cols + ", 1fr)";
+    grid.innerHTML = "";
+    for (let r = 0; r < seating.rows; r++) {
+      for (let c = 0; c < seating.cols; c++) {
+        const uid = seating.seats[seatKey(r, c)] || null;
+        const st = uid ? statusOf(uid) : { k: "empty", label: "빈 자리" };
+        const cell = document.createElement(editMode ? "div" : "button");
+        cell.className = "seat seat-" + st.k + (editMode ? " editing" : "");
+        cell.innerHTML = '<div class="seat-name">' + esc(st.label || "") + "</div>" +
+          (st.sub ? '<div class="seat-sub">' + esc(st.sub) + "</div>" : "");
+
+        if (editMode) {
+          cell.addEventListener("dragover", e => e.preventDefault());
+          cell.addEventListener("drop", e => { e.preventDefault(); if (dragUid) assignSeat(dragUid, r, c); });
+          if (uid) {
+            cell.setAttribute("draggable", "true");
+            cell.addEventListener("dragstart", () => { dragUid = uid; });
+            const x = document.createElement("span");
+            x.className = "seat-x"; x.textContent = "✕";
+            x.addEventListener("click", e => { e.stopPropagation(); unassign(uid); });
+            cell.appendChild(x);
+          } else {
+            cell.addEventListener("click", () => { if (selectUid) assignSeat(selectUid, r, c); });
+          }
+        } else if (uid) {
+          cell.addEventListener("click", () => openDetail(uid));
+        }
+        grid.appendChild(cell);
+      }
+    }
+    renderPool();
+  }
+
+  function renderPool() {
+    const pool = $("seat-pool");
+    if (!pool) return;
+    if (!editMode) { pool.innerHTML = ""; return; }
+    const seated = seatedUids();
+    const list = Object.keys(students).filter(u => !seated.has(u));
+    pool.innerHTML = '<div class="pool-title">미배치 학생 — 끌어다 빈자리에 놓거나, 학생을 누른 뒤 빈자리를 누르세요</div>';
+    if (!list.length) { pool.innerHTML += '<span class="dash-empty">모든 학생이 배치됐어요 ✅</span>'; return; }
+    list.forEach(u => {
+      const chip = document.createElement("div");
+      chip.className = "pool-chip" + (selectUid === u ? " sel" : "");
+      chip.textContent = (students[u].name || "학생");
+      chip.setAttribute("draggable", "true");
+      chip.addEventListener("dragstart", () => { dragUid = u; });
+      chip.addEventListener("click", () => { selectUid = (selectUid === u ? null : u); renderPool(); });
+      pool.appendChild(chip);
+    });
+  }
+
+  function autoAssign() {
+    const uids = Object.keys(students);
+    seating.seats = {};
+    let i = 0;
+    for (let r = 0; r < seating.rows && i < uids.length; r++)
+      for (let c = 0; c < seating.cols && i < uids.length; c++)
+        seating.seats[seatKey(r, c)] = uids[i++];
+    saveSeating(); renderSeating();
+  }
+
+  function applyDims() {
+    const r = Math.max(1, Math.min(12, parseInt($("seat-rows").value, 10) || 4));
+    const c = Math.max(1, Math.min(12, parseInt($("seat-cols").value, 10) || 5));
+    seating.rows = r; seating.cols = c;
+    Object.keys(seating.seats).forEach(k => {
+      const p = k.split("-"); if (+p[0] >= r || +p[1] >= c) delete seating.seats[k];
+    });
+    saveSeating(); renderSeating();
+  }
+
+  function toggleEdit() {
+    editMode = !editMode; selectUid = null; dragUid = null;
+    document.body.classList.toggle("seat-editing", editMode);
+    const b = $("seat-edit-toggle");
+    if (b) b.textContent = editMode ? "✅ 편집 완료" : "✏️ 자리 편집";
+    renderSeating();
+  }
+
+  function switchView(v) {
+    const seat = v === "seat";
+    $("seating-view").style.display = seat ? "" : "none";
+    $("list-view").style.display = seat ? "none" : "";
+    $("view-seat").classList.toggle("active", seat);
+    $("view-list").classList.toggle("active", !seat);
+  }
+
+  function initSeating() {
+    if ($("seat-rows")) $("seat-rows").value = seating.rows;
+    if ($("seat-cols")) $("seat-cols").value = seating.cols;
+    const bind = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
+    bind("seat-edit-toggle", toggleEdit);
+    bind("seat-apply", applyDims);
+    bind("seat-auto", autoAssign);
+    bind("seat-clear", () => { seating.seats = {}; saveSeating(); renderSeating(); });
+    bind("view-seat", () => switchView("seat"));
+    bind("view-list", () => switchView("list"));
+    renderSeating();
+  }
+  initSeating();
+
+  // 5초마다 상대시간/접속표시/자리색 갱신
+  setInterval(() => { if (started) { renderGrid(); renderSummary(); renderSeating(); } }, 5000);
 })();
