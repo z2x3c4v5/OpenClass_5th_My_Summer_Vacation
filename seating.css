@@ -142,3 +142,15 @@ body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
 /* 상세 모달의 완료 표시 / 미연습 표시 */
 .d-done { color: #b45309; }
 .d-notyet { color: #94a3b8; font-size: 0.82rem; }
+
+/* ===== 전체화면(키오스크) 모드 ===== */
+body.fs { background: linear-gradient(170deg, #e0f7fa, #d0f0fa 45%, #fffde7); }
+body.fs .dash-header, body.fs .userbar { display: none; }
+body.fs .view-toggle { position: fixed; top: 8px; right: 12px; margin: 0; z-index: 50; opacity: .85; }
+body.fs .view-toggle:hover { opacity: 1; }
+body.fs .dash-main { padding: 56px 18px 18px; max-width: none; }
+body.fs .podium { font-size: 1.2rem; padding: 14px; }
+body.fs .seat { min-height: 128px; }
+body.fs .seat-head .seat-name { font-size: 1.15rem; }
+body.fs .seat-sent { font-size: 0.8rem; }
+body.fs .seat-now { font-size: 0.82rem; }
