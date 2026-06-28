@@ -116,6 +116,7 @@ function makeCard(item, opts) {
 
   function speakSentence() {
     Track.event("listen", { en: item.en });
+    Track.liveState({ currentSentence: item.en });   // 지금 듣는 문장(단일·교체)
     speak(item.en, null,
       () => div.classList.add("speaking"),
       () => div.classList.remove("speaking"));
@@ -412,9 +413,14 @@ function persist() {
     localStorage.setItem("summer_stats", JSON.stringify(stats));
   } catch (e) {}
   if (window.Track) {
-    Track.setSelected([...selected.values()].map(it => ({
-      en: it.en, ko: it.ko || "", type: it.type || "suggest"
-    })));
+    Track.setSelected([...selected.values()].map(it => {
+      const st = stats[it.en] || {};
+      return {
+        en: it.en, ko: it.ko || "", type: it.type || "suggest",
+        attempts: st.attempts || 0, best: st.best || 0,
+        avg: st.avg != null ? st.avg : (st.best || 0)
+      };
+    }));
   }
 }
 function isSelected(en) { return selected.has(en); }

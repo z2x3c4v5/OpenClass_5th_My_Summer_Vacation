@@ -104,17 +104,26 @@ body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
 .seat-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .seat-head .seat-name { font-size: 1rem; }
 
-/* 자리 안 선택 문장 목록 */
+/* 지금 듣는/하는 문장 (단일·교체, 깜빡임) */
+.seat-now {
+  margin-top: 7px; font-size: 0.74rem; font-weight: 800;
+  background: #0ea5e9; color: #fff; padding: 3px 9px; border-radius: 9px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  animation: nowBlink 1.2s ease-in-out infinite;
+}
+@keyframes nowBlink { 0%,100% { opacity: 1; } 50% { opacity: .68; } }
+
+/* 자리 안 선택 문장 목록 (정확도·횟수 포함) */
 .seat-sents { margin-top: 7px; display: flex; flex-direction: column; gap: 3px; }
 .seat-sent {
   font-size: 0.72rem; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  padding: 2px 6px; border-radius: 8px; background: rgba(255,255,255,.5);
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 2px 7px; border-radius: 8px; background: rgba(255,255,255,.5);
 }
-.seat-sent.now {
-  background: #0ea5e9; color: #fff; font-weight: 800;
-  box-shadow: 0 2px 8px rgba(14,165,233,.4);
-}
+.ss-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ss-stat { flex: none; font-size: 0.66rem; color: var(--muted); font-weight: 800; }
+.seat-sent.now { background: #0ea5e9; color: #fff; font-weight: 800; box-shadow: 0 2px 8px rgba(14,165,233,.4); }
+.seat-sent.now .ss-stat { color: rgba(255,255,255,.92); }
 
 /* ===== 선택 문장 진행도 배지 ===== */
 .seat-badge {
