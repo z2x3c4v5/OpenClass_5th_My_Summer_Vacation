@@ -479,8 +479,25 @@
     bind("seat-clear", () => { seating.seats = {}; saveSeating(); renderSeating(); });
     bind("view-seat", () => switchView("seat"));
     bind("view-list", () => switchView("list"));
+    bind("fs-toggle", toggleFullscreen);
+    document.addEventListener("fullscreenchange", () => {
+      const fs = !!document.fullscreenElement;
+      document.body.classList.toggle("fs", fs);
+      const b = $("fs-toggle");
+      if (b) b.textContent = fs ? "⛶ 전체화면 끄기" : "⛶ 전체화면";
+    });
     switchView("seat");   // 기본은 자리 보기(피드 숨김)
     renderSeating();
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen();
+    } else {
+      const el = document.documentElement;
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req) { try { req.call(el); } catch (e) {} }
+    }
   }
   initSeating();
 
