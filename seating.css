@@ -83,3 +83,42 @@ body.seat-editing .seat-edit-only { display: inline-flex; }
 .lg-success { background: #d1fae5; } .lg-fail { background: #ffe4e6; }
 .lg-struggling { background: #fde68a; } .lg-ok { background: #fff; border: 1px solid #e2e8f0; }
 .lg-offline { background: #eef2f5; }
+
+/* ===== 레이아웃: 자리 크게, 활동 작게/숨김 ===== */
+.dash-main { grid-template-columns: 1fr 280px; }
+body.feed-hidden .dash-main { grid-template-columns: 1fr; }
+body.feed-hidden #feed-col { display: none; }
+.vt-btn.ghost { background: #fff; color: var(--muted); }
+
+/* 활동 피드 컴팩트화 */
+#feed-col .dash-h2 { font-size: 1rem; }
+#feed-col .feed { max-height: 80vh; }
+#feed-col .feed-row { grid-template-columns: 52px 1fr auto; padding: 6px 5px; }
+#feed-col .feed-name { font-size: 0.72rem; }
+#feed-col .feed-text { font-size: 0.78rem; }
+#feed-col .feed-time { font-size: 0.66rem; }
+
+/* 자리 더 크게 (피드 숨기면 한 화면 가득) */
+.seating-grid { gap: 12px; }
+.seat { min-height: 92px; padding: 16px 10px; }
+.seat-name { font-size: 1rem; }
+.seat-sub { font-size: 0.78rem; }
+
+/* ===== 선택 문장 진행도 배지 ===== */
+.seat-badge {
+  position: absolute; top: 6px; left: 8px;
+  font-size: 0.68rem; font-weight: 800; color: var(--muted);
+  background: rgba(255,255,255,.75); padding: 1px 7px; border-radius: 10px;
+}
+.seat-badge.done { color: #b45309; background: #fef3c7; }
+
+/* 4문장 완료 — 금색 테두리 + 펄스 강조 */
+.seat-complete { outline: 3px solid #fbbf24; outline-offset: -1px; animation: doneGlow 1.4s ease-in-out infinite; }
+@keyframes doneGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,.55); }
+  50%     { box-shadow: 0 0 0 9px rgba(251,191,36,0); }
+}
+
+/* 상세 모달의 완료 표시 / 미연습 표시 */
+.d-done { color: #b45309; }
+.d-notyet { color: #94a3b8; font-size: 0.82rem; }

@@ -48,6 +48,8 @@
   const feedEvents = {};          // uid -> 최근 이벤트 배열
   const feedUnsubs = {};          // uid -> 구독 해제 함수
 
+  const TARGET_SENTENCES = 4;     // 학생이 만들어야 하는 문장 개수
+
   // 🪑 자리 배치 상태 (이 브라우저에 저장 → Firebase 불필요)
   let seating = loadSeating();
   let editMode = false, dragUid = null, selectUid = null;
@@ -68,6 +70,7 @@
       renderGrid();
       renderSummary();
       renderSeating();
+      if (detailUid) renderDetail();
     }, err => console.warn("students:", err));
   }
 
@@ -191,31 +194,27 @@
   }
 
   /* ---------------- 학생 상세 ---------------- */
+  let detailUid = null, detailPractice = {};
+
   function openDetail(uid) {
     closeDetailSubs();
+    detailUid = uid; detailPractice = {};
     const s = students[uid] || {};
     $("detail-name").textContent = (s.name || "학생") + (s.email ? "  ·  " + s.email : "");
-    const body = $("detail-body");
-    body.innerHTML =
-      '<h3 class="detail-h3">🎤 문장별 연습 성취</h3><div id="d-practice" class="d-practice">불러오는 중...</div>' +
-      '<h3 class="detail-h3">⚡ 최근 행동</h3><div id="d-events" class="d-events">불러오는 중...</div>';
+    $("detail-body").innerHTML =
+      '<h3 class="detail-h3">✏️ 선택한 문장 <span id="d-selcount"></span></h3>' +
+      '<div id="d-selected" class="d-practice">불러오는 중...</div>' +
+      '<h3 class="detail-h3">⚡ 최근 행동</h3>' +
+      '<div id="d-events" class="d-events">불러오는 중...</div>';
     $("detail").classList.remove("hidden");
 
     detailUnsubs.push(
       db.collection("students").doc(uid).collection("practice").orderBy("updatedAt", "desc")
         .onSnapshot(snap => {
-          const el = $("d-practice");
-          if (!el) return;
-          if (snap.empty) { el.innerHTML = '<p class="dash-empty">아직 연습 기록이 없어요.</p>'; return; }
-          let html = '<table class="d-table"><tr><th>문장</th><th>최고</th><th>최근</th><th>횟수</th></tr>';
-          snap.forEach(d => {
-            const p = d.data();
-            html += '<tr><td>' + esc(p.en) + '</td><td><b>' + (p.best || 0) + '%</b></td><td>' +
-              (p.lastScore != null ? p.lastScore + "%" : "—") + '</td><td>' + (p.attempts || 0) + '</td></tr>';
-          });
-          html += '</table>';
-          el.innerHTML = html;
-        }, e => { const el = $("d-practice"); if (el) el.textContent = "불러오기 실패: " + e.message; })
+          detailPractice = {};
+          snap.forEach(d => { const p = d.data(); detailPractice[p.en] = p; });
+          renderDetail();
+        }, e => { const el = $("d-selected"); if (el) el.textContent = "불러오기 실패: " + e.message; })
     );
 
     detailUnsubs.push(
@@ -236,7 +235,37 @@
     );
   }
 
-  function closeDetailSubs() { detailUnsubs.forEach(u => { try { u(); } catch (e) {} }); detailUnsubs = []; }
+  // 선택한 문장 + 문장별 연습 성취(연습 횟수·평균·최고)
+  function renderDetail() {
+    if (!detailUid) return;
+    const el = $("d-selected");
+    if (!el) return;
+    const s = students[detailUid] || {};
+    const sel = s.selected || [];
+    const cnt = $("d-selcount");
+    if (cnt) cnt.innerHTML = "(" + sel.length + "/" + TARGET_SENTENCES + ")" +
+      (sel.length >= TARGET_SENTENCES ? ' <b class="d-done">⭐ 완료</b>' : "");
+    if (!sel.length) {
+      el.innerHTML = '<p class="dash-empty">아직 선택한 문장이 없어요. (학생이 ⭐로 담으면 여기 떠요)</p>';
+      return;
+    }
+    let html = '<table class="d-table"><tr><th>문장</th><th>연습</th><th>평균</th><th>최고</th></tr>';
+    sel.forEach(it => {
+      const tag = it.type === "combo" ? "🧩 " : "🙋 ";
+      const p = detailPractice[it.en];
+      if (p) {
+        const avg = p.avg != null ? p.avg : (p.best || 0);
+        html += '<tr><td>' + tag + esc(it.en) + '</td><td>' + (p.attempts || 0) + '회</td>' +
+          '<td><b>' + avg + '%</b></td><td>' + (p.best || 0) + '%</td></tr>';
+      } else {
+        html += '<tr><td>' + tag + esc(it.en) + '</td><td colspan="3" class="d-notyet">아직 연습 안 함</td></tr>';
+      }
+    });
+    html += '</table>';
+    el.innerHTML = html;
+  }
+
+  function closeDetailSubs() { detailUnsubs.forEach(u => { try { u(); } catch (e) {} }); detailUnsubs = []; detailUid = null; }
   $("detail-close").addEventListener("click", () => { $("detail").classList.add("hidden"); closeDetailSubs(); });
   $("detail").addEventListener("click", e => { if (e.target.id === "detail") { $("detail").classList.add("hidden"); closeDetailSubs(); } });
 
@@ -314,6 +343,17 @@
         cell.className = "seat seat-" + st.k + (editMode ? " editing" : "");
         cell.innerHTML = '<div class="seat-name">' + esc(st.label || "") + "</div>" +
           (st.sub ? '<div class="seat-sub">' + esc(st.sub) + "</div>" : "");
+
+        // 선택한 문장 진행도 (✏️ N/4), 다 채우면 ⭐ + 강조
+        if (uid && !editMode) {
+          const sc = (students[uid] && students[uid].selected) ? students[uid].selected.length : 0;
+          const done = sc >= TARGET_SENTENCES;
+          if (done) cell.classList.add("seat-complete");
+          const badge = document.createElement("div");
+          badge.className = "seat-badge" + (done ? " done" : "");
+          badge.textContent = (done ? "⭐ " : "✏️ ") + sc + "/" + TARGET_SENTENCES;
+          cell.appendChild(badge);
+        }
 
         if (editMode) {
           cell.addEventListener("dragover", e => e.preventDefault());
@@ -402,6 +442,11 @@
     bind("seat-clear", () => { seating.seats = {}; saveSeating(); renderSeating(); });
     bind("view-seat", () => switchView("seat"));
     bind("view-list", () => switchView("list"));
+    bind("feed-toggle", () => {
+      const hidden = document.body.classList.toggle("feed-hidden");
+      const b = $("feed-toggle");
+      if (b) b.textContent = hidden ? "⚡ 활동 보기" : "⚡ 활동 숨기기";
+    });
     renderSeating();
   }
   initSeating();

@@ -59,9 +59,18 @@ window.Track = (function () {
     ref().collection("practice").doc(id).set({
       en: item.en, ko: item.ko || "", type: item.type || "suggest",
       attempts: stats.attempts, best: stats.best,
+      avg: stats.avg != null ? stats.avg : stats.best,
       lastScore: score, lastHeard: heard || "", updatedAt: ts()
     }, { merge: true }).catch(() => {});
   }
 
-  return { init: init, event: event, liveState: liveState, practice: practice };
+  // 학생이 ⭐로 담은 "선택한 문장" 목록 전체를 학생 문서에 저장
+  function setSelected(list) {
+    if (!ready) { queue.push(() => setSelected(list)); return; }
+    ref().set({
+      selected: list || [], selectedCount: (list || []).length, lastActive: ts()
+    }, { merge: true }).catch(() => {});
+  }
+
+  return { init: init, event: event, liveState: liveState, practice: practice, setSelected: setSelected };
 })();

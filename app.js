@@ -411,6 +411,11 @@ function persist() {
     localStorage.setItem("summer_selected", JSON.stringify([...selected.values()]));
     localStorage.setItem("summer_stats", JSON.stringify(stats));
   } catch (e) {}
+  if (window.Track) {
+    Track.setSelected([...selected.values()].map(it => ({
+      en: it.en, ko: it.ko || "", type: it.type || "suggest"
+    })));
+  }
 }
 function isSelected(en) { return selected.has(en); }
 function toggleSelect(item, type) {
@@ -579,9 +584,11 @@ function makePracticeCard(item) {
     fb.className = "mic-feedback";
     practiceAttempt(item.en, {
       onresult: (score, heard) => {
-        const s = stats[item.en] || { attempts: 0, best: 0 };
+        const s = stats[item.en] || { attempts: 0, best: 0, sum: 0 };
         s.attempts++;
         s.best = Math.max(s.best, score);
+        s.sum = (s.sum || 0) + score;
+        s.avg = Math.round(s.sum / s.attempts);
         stats[item.en] = s;
         persist();
         Track.practice(item, s, score, heard);
