@@ -500,3 +500,50 @@ main { max-width: 980px; margin: 0 auto; padding: 0 16px 50px; }
 
 /* 누구와(With) 칩 선택 색 */
 .chip.with.on { background: linear-gradient(135deg, #a78bfa, #7c3aed); color: #fff; border-color: transparent; }
+
+/* ===== 구글 로그인 게이트 ===== */
+.login-gate {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background:
+    radial-gradient(900px 500px at 90% -8%, #fde68a 0%, transparent 55%),
+    radial-gradient(1100px 600px at -10% 0%, #a5f3fc 0%, transparent 55%),
+    linear-gradient(170deg, var(--bg1) 0%, #d0f0fa 45%, var(--bg2) 100%);
+}
+.login-gate.hidden { display: none; }
+.login-card {
+  background: var(--card); border-radius: 24px; padding: 36px 30px; text-align: center;
+  box-shadow: var(--shadow); max-width: 360px; width: 100%;
+}
+.login-emoji { font-size: 3rem; }
+.login-card h2 { color: var(--primary-dark); margin: 8px 0; }
+.login-sub { color: var(--muted); margin: 4px 0 22px; }
+.google-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: #fff; color: #3c4043; border: 2px solid #dadce0;
+  padding: 12px 22px; border-radius: 30px; font-size: 1rem; font-weight: 800;
+  cursor: pointer; box-shadow: var(--shadow-sm); transition: transform .12s, box-shadow .2s;
+}
+.google-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow); }
+.google-btn:disabled { opacity: .6; cursor: default; }
+.g-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: conic-gradient(#ea4335 0 25%, #fbbc05 0 50%, #34a853 0 75%, #4285f4 0);
+  color: #fff; font-weight: 900; font-size: 0.9rem;
+}
+.login-msg { color: var(--neg); margin-top: 14px; font-size: 0.85rem; line-height: 1.5; min-height: 1em; }
+
+/* ===== 상단 사용자 바 ===== */
+.userbar {
+  display: flex; align-items: center; gap: 10px; justify-content: flex-end;
+  padding: 8px 16px; flex-wrap: wrap;
+}
+.userbar-name { font-weight: 800; color: var(--primary-dark); font-size: 0.86rem; }
+.userbar-btn {
+  background: var(--card); border: none; color: var(--text); text-decoration: none;
+  padding: 7px 14px; border-radius: 20px; font-weight: 700; font-size: 0.82rem;
+  cursor: pointer; box-shadow: var(--shadow-sm);
+}
+.userbar-btn.dash { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; }
+.userbar-btn:hover { filter: brightness(1.05); }

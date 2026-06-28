@@ -59,6 +59,9 @@ function showWordPopup(wordEl, rawWord) {
   popup.querySelector(".wp-word").textContent = rawWord.replace(/[.,!?]+$/, "");
   popup.querySelector(".wp-meaning").textContent = meaning;
 
+  Track.event("word_lookup", { word: key || rawWord, meaning: meaning });
+  Track.liveState({ lastWord: key || rawWord });
+
   popup.classList.remove("hidden");
   const r = wordEl.getBoundingClientRect();
   const pw = popup.offsetWidth;
@@ -112,6 +115,7 @@ function makeCard(item, opts) {
   div.className = "card" + (opts.tone != null ? " tone-" + opts.tone : "");
 
   function speakSentence() {
+    Track.event("listen", { en: item.en });
     speak(item.en, null,
       () => div.classList.add("speaking"),
       () => div.classList.remove("speaking"));
@@ -219,6 +223,8 @@ document.querySelectorAll(".level-btn").forEach(btn => {
     document.querySelectorAll(".level-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentLevel = btn.dataset.level;
+    Track.event("filter_change", { level: currentLevel });
+    Track.liveState({ level: currentLevel });
     synth.cancel();
     hidePopup();
     renderSuggestions();
@@ -230,6 +236,8 @@ document.querySelectorAll(".cat-btn").forEach(btn => {
     document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentCategory = btn.dataset.cat;
+    Track.event("filter_change", { category: currentCategory });
+    Track.liveState({ category: currentCategory });
     synth.cancel();
     hidePopup();
     renderSuggestions();
@@ -242,6 +250,7 @@ document.querySelectorAll(".cat-btn").forEach(btn => {
 let buildActivity = null;
 let buildModifier = null; // { en, ko, type: "when" | "where" }
 let lastBuilt = "";       // 마지막으로 들려준 문장 (별표 토글 때 중복 재생 방지)
+let lastInvalid = "";     // 마지막으로 기록한 어색한 조합 (중복 기록 방지)
 
 function makeChip(text, cls, isOn, onClick) {
   const c = document.createElement("button");
@@ -307,6 +316,11 @@ function updateBuildResult() {
   // 장소가 이미 들어 있는 활동(go to the beach 등)에 또 장소를 붙이면 어색함
   const clash = buildModifier.type === "where" && buildActivity.place;
   if (clash) {
+    const tryEn = `I'll ${buildActivity.en} ${buildModifier.en}.`;
+    if (tryEn !== lastInvalid) {
+      lastInvalid = tryEn;
+      Track.event("sentence_invalid", { en: tryEn, reason: "place_clash" });
+    }
     box.className = "build-result bad";
     box.innerHTML = "";
     const badge = document.createElement("div");
@@ -356,7 +370,12 @@ function updateBuildResult() {
   box.append(badge, enEl, koEl, actions);
 
   // 새로운 문장이 완성되면 한 번만 들려주기 (별표 토글로 다시 부르면 재생 안 함)
-  if (en !== lastBuilt) { lastBuilt = en; speak(en); }
+  if (en !== lastBuilt) {
+    lastBuilt = en;
+    Track.event("sentence_built", { en: en, ko: ko });
+    Track.liveState({ currentSentence: en });
+    speak(en);
+  }
 }
 
 document.getElementById("build-random").addEventListener("click", () => {
@@ -395,8 +414,10 @@ function persist() {
 }
 function isSelected(en) { return selected.has(en); }
 function toggleSelect(item, type) {
-  if (selected.has(item.en)) selected.delete(item.en);
-  else selected.set(item.en, { en: item.en, ko: item.ko, emoji: item.emoji, imgPrompt: item.imgPrompt, type: type || "suggest" });
+  let added;
+  if (selected.has(item.en)) { selected.delete(item.en); added = false; }
+  else { selected.set(item.en, { en: item.en, ko: item.ko, emoji: item.emoji, imgPrompt: item.imgPrompt, type: type || "suggest" }); added = true; }
+  Track.event("select_toggle", { en: item.en, ko: item.ko || "", on: added, type: type || "suggest" });
   persist();
   updatePracticeBadge();
   renderSuggestions();
@@ -563,6 +584,9 @@ function makePracticeCard(item) {
         s.best = Math.max(s.best, score);
         stats[item.en] = s;
         persist();
+        Track.practice(item, s, score, heard);
+        Track.event("practice_attempt", { en: item.en, score: score, heard: heard || "", best: s.best, attempts: s.attempts });
+        Track.liveState({ tab: "practice", currentSentence: item.en });
         renderStats(score);
         if (score >= 75) { fb.className = "mic-feedback good"; fb.innerHTML = `⭐ 훌륭해요! (${score}%)<br><span class="heard">내가 한 발음: ${heard}</span>`; }
         else if (score >= 45) { fb.className = "mic-feedback good"; fb.innerHTML = `👍 좋아요! 한 번 더! (${score}%)<br><span class="heard">내가 한 발음: ${heard}</span>`; }
@@ -612,6 +636,8 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    Track.event("tab_view", { tab: btn.dataset.tab });
+    Track.liveState({ tab: btn.dataset.tab });
     synth.cancel();
     hidePopup();
     if (btn.dataset.tab === "practice") renderPractice();

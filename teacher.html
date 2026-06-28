@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 학생 대시보드 · Summer Plan Makers</title>
+  <link rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <!-- 로그인 / 권한 게이트 -->
+  <div id="login-gate" class="login-gate">
+    <div class="login-card">
+      <div class="login-emoji">📊</div>
+      <h2>선생님 대시보드</h2>
+      <p class="login-sub">관리자 구글 계정으로 로그인하세요.</p>
+      <button id="login-btn" class="google-btn"><span class="g-ico">G</span> 구글로 로그인</button>
+      <p id="login-msg" class="login-msg"></p>
+    </div>
+  </div>
+
+  <div id="userbar" class="userbar">
+    <a href="index.html" class="userbar-btn">← 학생 화면</a>
+    <span id="who-am-i" class="userbar-name"></span>
+    <button id="logout-btn" class="userbar-btn">로그아웃</button>
+  </div>
+
+  <header class="dash-header">
+    <h1>📊 학생 학습 대시보드</h1>
+    <p class="subtitle">학생들이 지금 무엇을 누르고, 어떤 문장을 만들고, 어떻게 연습하는지 실시간으로 보여줍니다.</p>
+    <div class="dash-stats" id="dash-summary"></div>
+  </header>
+
+  <main class="dash-main">
+    <section class="dash-col dash-col-wide">
+      <h2 class="dash-h2">👩‍🎓 학생 현황 <span id="student-count" class="count">0명</span></h2>
+      <div id="student-grid" class="student-grid"></div>
+    </section>
+
+    <section class="dash-col">
+      <h2 class="dash-h2">⚡ 실시간 활동</h2>
+      <div id="feed" class="feed"></div>
+    </section>
+  </main>
+
+  <!-- 학생 상세 패널 -->
+  <div id="detail" class="detail-overlay hidden">
+    <div class="detail-card">
+      <button id="detail-close" class="detail-close" aria-label="닫기">✕</button>
+      <h2 id="detail-name">학생</h2>
+      <div id="detail-body"></div>
+    </div>
+  </div>
+
+  <!-- Firebase (compat SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="teacher.js"></script>
+</body>
+</html>
