@@ -24,5 +24,11 @@ service cloud.firestore {
         allow write: if isOwner(uid);
       }
     }
+
+    // 대시보드의 "전체 활동 피드"는 모든 학생의 events를 한꺼번에 읽는
+    // 컬렉션 그룹 쿼리라서, 관리자 전용 규칙을 따로 둬야 동작합니다.
+    match /{path=**}/events/{eventId} {
+      allow read: if isAdmin();
+    }
   }
 }
