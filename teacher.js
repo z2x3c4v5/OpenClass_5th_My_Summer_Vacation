@@ -241,7 +241,7 @@
     const el = $("d-selected");
     if (!el) return;
     const s = students[detailUid] || {};
-    const sel = s.selected || [];
+    const sel = (s.selected || []).filter(it => it.type === "combo");
     const cnt = $("d-selcount");
     if (cnt) cnt.innerHTML = "(" + sel.length + "/" + TARGET_SENTENCES + ")" +
       (sel.length >= TARGET_SENTENCES ? ' <b class="d-done">⭐ 완료</b>' : "");
@@ -291,29 +291,37 @@
   // 학생 1명의 현재 상태 판정 (색상/문구)
   function statusOf(uid) {
     const s = students[uid];
-    if (!s) return { k: "empty", label: "빈 자리" };
-    if (!isOnline(s)) return { k: "offline", label: s.name || "학생", sub: "오프라인" };
+    if (!s) return { k: "empty", label: "빈 자리", alert: false };
+    if (!isOnline(s)) return { k: "offline", label: s.name || "학생", sub: "오프라인", alert: false };
 
     const evs = feedEvents[uid] || [];
     const practices = evs.filter(e => e.type === "practice_attempt");
     const live = s.liveState || {};
-    const actSec = live.lastAt && live.lastAt.toMillis ? (nowMs() - live.lastAt.toMillis()) / 1000 : 9999;
+    const hasAct = live.lastAt && live.lastAt.toMillis;
+    const actSec = hasAct ? (nowMs() - live.lastAt.toMillis()) / 1000 : 0;
 
-    // 도움 필요: 최근 연습 3회 모두 50% 미만 / 접속 중이나 90초+ 아무 조작 없음
-    const low3 = practices.length >= 3 && practices.slice(0, 3).every(p => scoreOf(p) < 50);
-    if (low3 || actSec > 90) return { k: "struggling", label: s.name || "학생", sub: "도움 필요" };
+    // 🔴 빨간 테두리(도움 필요) 판정
+    const recent = practices.slice(0, 3).map(scoreOf);
+    const recentAvg = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length) : null;
+    const poor = recent.length >= 2 && recentAvg < 50;     // 최근 연습 정확도 낮음
+    const idleStuck = hasAct && actSec > 90;                // 접속 중인데 오래 무반응(안 누름)
+    const alert = poor || idleStuck;
 
+    // 배경색: 최근 연습 결과
+    let k = "ok";
     const lastP = practices[0];
     if (lastP) {
       const sc = scoreOf(lastP);
       const pSec = lastP.ts && lastP.ts.toMillis ? (nowMs() - lastP.ts.toMillis()) / 1000 : 9999;
-      if (pSec < 90) {
-        if (sc >= 75) return { k: "success", label: s.name || "학생", sub: sc + "% 정답" };
-        if (sc < 45)  return { k: "fail",    label: s.name || "학생", sub: sc + "% 오답" };
-        return { k: "ok", label: s.name || "학생", sub: sc + "%" };
-      }
+      if (pSec < 90) k = sc >= 75 ? "success" : (sc < 45 ? "fail" : "ok");
     }
-    return { k: "ok", label: s.name || "학생", sub: live.tab ? (TAB_NAMES[live.tab] || live.tab) : "학습 중" };
+
+    let sub;
+    if (alert) sub = idleStuck ? "멈춤? 확인" : "정확도 낮음 " + (recentAvg != null ? recentAvg + "%" : "");
+    else if (lastP && scoreOf(lastP) >= 75) sub = scoreOf(lastP) + "% 정답";
+    else sub = live.tab ? (TAB_NAMES[live.tab] || live.tab) : "학습 중";
+
+    return { k: k, label: s.name || "학생", sub: sub, alert: alert };
   }
 
   function seatKey(r, c) { return r + "-" + c; }
@@ -333,7 +341,8 @@
   // 자리 한 칸 내용: 이름 + 진행도 + (지금 듣는 문장) + 선택한 문장 4개(정확도·횟수)
   function seatInner(uid, st) {
     const s = students[uid] || {};
-    const sel = s.selected || [];
+    // 문장 만들기(조합)로 연습목록에 담은 문장만 표시
+    const sel = (s.selected || []).filter(it => it.type === "combo");
     const cur = (s.liveState && s.liveState.currentSentence) || "";
     const done = sel.length >= TARGET_SENTENCES;
     const inSel = sel.some(it => it.en === cur);
@@ -383,8 +392,9 @@
             esc(uid ? (students[uid].name || "학생") : "빈 자리") + "</div>";
         } else if (uid) {
           cell.innerHTML = seatInner(uid, st);
-          const sc = (students[uid] && students[uid].selected) ? students[uid].selected.length : 0;
-          if (sc >= TARGET_SENTENCES) cell.classList.add("seat-complete");
+          const combos = (students[uid].selected || []).filter(it => it.type === "combo");
+          if (st.alert) cell.classList.add("seat-alert");            // 🔴 도움 필요
+          else if (combos.length >= TARGET_SENTENCES) cell.classList.add("seat-complete"); // ⭐ 완료
         } else {
           cell.innerHTML = '<div class="seat-name">빈 자리</div>';
         }

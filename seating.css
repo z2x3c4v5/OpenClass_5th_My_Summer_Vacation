@@ -83,6 +83,8 @@ body.seat-editing .seat-edit-only { display: inline-flex; }
 .lg-success { background: #d1fae5; } .lg-fail { background: #ffe4e6; }
 .lg-struggling { background: #fde68a; } .lg-ok { background: #fff; border: 1px solid #e2e8f0; }
 .lg-offline { background: #eef2f5; }
+.lg-alert { background: #fff; border: 2px solid #ef4444; }
+.lg-complete { background: #fff; border: 2px solid #fbbf24; }
 
 /* ===== 레이아웃: 자리 보기=꽉차게 / 목록 보기=옆에 실시간 활동 ===== */
 .dash-main { grid-template-columns: 1fr 320px; }       /* 목록 보기 */
@@ -137,6 +139,14 @@ body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
 @keyframes doneGlow {
   0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,.55); }
   50%     { box-shadow: 0 0 0 9px rgba(251,191,36,0); }
+}
+
+/* 🔴 도움 필요 — 빨간 테두리 + 펄스 (정확도 낮음 / 멈춤) */
+.seat-alert { outline: 3px solid #ef4444; outline-offset: -1px; animation: alertGlow 1s ease-in-out infinite; }
+.seat-alert .seat-sub { color: #b91c1c; font-weight: 900; }
+@keyframes alertGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
+  50%     { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
 }
 
 /* 상세 모달의 완료 표시 / 미연습 표시 */
