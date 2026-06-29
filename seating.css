@@ -93,8 +93,8 @@ body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
 /* 목록 보기의 활동 피드 */
 #feed-col .feed { max-height: 80vh; }
 
-/* 자리 꽉 차게 + 크게 */
-.seating-grid { gap: 12px; }
+/* 자리 꽉 차게 + 크게 (모든 칸 같은 높이로 정렬) */
+.seating-grid { gap: 12px; grid-auto-rows: 1fr; align-items: stretch; }
 .seat {
   min-height: 150px; padding: 16px 16px;
   justify-content: flex-start; text-align: left; align-items: stretch;
@@ -169,13 +169,17 @@ body.fs { background: linear-gradient(170deg, #e0f7fa, #d0f0fa 45%, #fffde7); }
 body.fs .dash-header, body.fs .userbar { display: none; }
 body.fs .view-toggle { position: fixed; top: 8px; right: 12px; margin: 0; z-index: 50; opacity: .85; }
 body.fs .view-toggle:hover { opacity: 1; }
-body.fs .dash-main { padding: 56px 18px 18px; max-width: none; }
-body.fs .podium { font-size: 1.5rem; padding: 16px; }
-body.fs .seat { min-height: 180px; padding: 18px; }
-body.fs .seat-head .seat-name { font-size: 1.45rem; }
-body.fs .seat-sent { font-size: 1.05rem; }
-body.fs .ss-stat { font-size: 0.92rem; }
-body.fs .seat-now { font-size: 1.05rem; }
-body.fs .seat-badge { font-size: 0.98rem; }
-body.fs .seat-chal { font-size: 0.95rem; }
-body.fs .seat-sub { font-size: 1.05rem; }
+body.fs .dash-main { padding: 52px 18px 16px; max-width: none; height: 100vh; }
+body.fs .podium { font-size: 1.6rem; padding: 14px; margin-bottom: 12px; }
+/* 자리 그리드가 화면 세로를 꽉 채우고, 3줄이 똑같이 커지도록 */
+body.fs .seating-grid { min-height: calc(100vh - 170px); grid-auto-rows: 1fr; gap: 14px; }
+body.fs .seat { min-height: 0; padding: 20px 22px; }
+body.fs .seat-head .seat-name { font-size: 1.7rem; }
+body.fs .seat-sent { font-size: 1.18rem; }
+body.fs .ss-stat { font-size: 1rem; }
+body.fs .seat-now { font-size: 1.25rem; padding: 8px 14px; }
+body.fs .seat-badge { font-size: 1.1rem; padding: 4px 12px; }
+body.fs .seat-chal { font-size: 1.05rem; }
+body.fs .seat-sub { font-size: 1.2rem; }
+/* 전체화면에선 범례 숨겨 자리 공간 확보 */
+body.fs .seat-legend { display: none; }
