@@ -96,20 +96,20 @@ body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
 /* 자리 꽉 차게 + 크게 */
 .seating-grid { gap: 12px; }
 .seat {
-  min-height: 110px; padding: 12px 12px;
+  min-height: 150px; padding: 16px 16px;
   justify-content: flex-start; text-align: left; align-items: stretch;
 }
-.seat-name { font-size: 1rem; }
-.seat-sub { font-size: 0.78rem; }
+.seat-name { font-size: 1.2rem; }
+.seat-sub { font-size: 0.95rem; }
 
 /* 자리 머리: 이름 + 진행도 */
 .seat-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.seat-head .seat-name { font-size: 1rem; }
+.seat-head .seat-name { font-size: 1.2rem; }
 
 /* 지금 듣는/하는 문장 (단일·교체, 깜빡임) */
 .seat-now {
-  margin-top: 7px; font-size: 0.74rem; font-weight: 800;
-  background: #0ea5e9; color: #fff; padding: 3px 9px; border-radius: 9px;
+  margin-top: 8px; font-size: 0.92rem; font-weight: 800;
+  background: #0ea5e9; color: #fff; padding: 5px 10px; border-radius: 9px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   animation: nowBlink 1.2s ease-in-out infinite;
 }
@@ -123,21 +123,25 @@ body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
 }
 
 /* 자리 안 선택 문장 목록 (정확도·횟수 포함) */
-.seat-sents { margin-top: 7px; display: flex; flex-direction: column; gap: 3px; }
+.seat-sents { margin-top: 9px; display: flex; flex-direction: column; gap: 5px; }
 .seat-sent {
-  font-size: 0.72rem; color: var(--text);
-  display: flex; align-items: center; justify-content: space-between; gap: 6px;
-  padding: 2px 7px; border-radius: 8px; background: rgba(255,255,255,.5);
+  font-size: 0.92rem; color: var(--text); line-height: 1.25;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  padding: 5px 9px; border-radius: 9px; background: rgba(255,255,255,.55);
 }
-.ss-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ss-stat { flex: none; font-size: 0.66rem; color: var(--muted); font-weight: 800; }
+/* 영어 문장은 최대 2줄까지 줄바꿈 */
+.ss-text {
+  flex: 1; min-width: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ss-stat { flex: none; font-size: 0.8rem; color: var(--muted); font-weight: 800; white-space: nowrap; }
 .seat-sent.now { background: #0ea5e9; color: #fff; font-weight: 800; box-shadow: 0 2px 8px rgba(14,165,233,.4); }
 .seat-sent.now .ss-stat { color: rgba(255,255,255,.92); }
 
 /* ===== 선택 문장 진행도 배지 ===== */
 .seat-badge {
-  flex: none; font-size: 0.68rem; font-weight: 800; color: var(--muted);
-  background: rgba(255,255,255,.85); padding: 2px 8px; border-radius: 10px;
+  flex: none; font-size: 0.86rem; font-weight: 800; color: var(--muted);
+  background: rgba(255,255,255,.85); padding: 3px 10px; border-radius: 10px;
 }
 .seat-badge.done { color: #b45309; background: #fef3c7; }
 
@@ -166,8 +170,12 @@ body.fs .dash-header, body.fs .userbar { display: none; }
 body.fs .view-toggle { position: fixed; top: 8px; right: 12px; margin: 0; z-index: 50; opacity: .85; }
 body.fs .view-toggle:hover { opacity: 1; }
 body.fs .dash-main { padding: 56px 18px 18px; max-width: none; }
-body.fs .podium { font-size: 1.2rem; padding: 14px; }
-body.fs .seat { min-height: 128px; }
-body.fs .seat-head .seat-name { font-size: 1.15rem; }
-body.fs .seat-sent { font-size: 0.8rem; }
-body.fs .seat-now { font-size: 0.82rem; }
+body.fs .podium { font-size: 1.5rem; padding: 16px; }
+body.fs .seat { min-height: 180px; padding: 18px; }
+body.fs .seat-head .seat-name { font-size: 1.45rem; }
+body.fs .seat-sent { font-size: 1.05rem; }
+body.fs .ss-stat { font-size: 0.92rem; }
+body.fs .seat-now { font-size: 1.05rem; }
+body.fs .seat-badge { font-size: 0.98rem; }
+body.fs .seat-chal { font-size: 0.95rem; }
+body.fs .seat-sub { font-size: 1.05rem; }
