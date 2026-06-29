@@ -30,5 +30,10 @@ service cloud.firestore {
     match /{path=**}/events/{eventId} {
       allow read: if isAdmin();
     }
+
+    // 자리 배치 등 교사 설정 — 관리자만 읽기/쓰기 (기기 간 유지)
+    match /config/{doc} {
+      allow read, write: if isAdmin();
+    }
   }
 }
