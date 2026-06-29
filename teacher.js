@@ -58,7 +58,11 @@
     try { return Object.assign(defSeating(), JSON.parse(localStorage.getItem("seating_v1") || "null") || {}); }
     catch (e) { return defSeating(); }
   }
-  function saveSeating() { try { localStorage.setItem("seating_v1", JSON.stringify(seating)); } catch (e) {} }
+  function saveSeating() {
+    try { localStorage.setItem("seating_v1", JSON.stringify(seating)); } catch (e) {}
+    // 클라우드에도 저장 → 다른 기기에서도 그대로 유지
+    try { db.collection("config").doc("seating").set(seating).catch(function () {}); } catch (e) {}
+  }
 
   function start() {
     db.collection("students").onSnapshot(snap => {
@@ -72,6 +76,17 @@
       renderSeating();
       if (detailUid) renderDetail();
     }, err => console.warn("students:", err));
+
+    // 자리 배치를 클라우드에서 불러와 기기 간 동기화(어느 PC에서 열어도 유지)
+    db.collection("config").doc("seating").onSnapshot(d => {
+      if (d.exists && d.data() && d.data().seats) {
+        seating = Object.assign(defSeating(), d.data());
+        try { localStorage.setItem("seating_v1", JSON.stringify(seating)); } catch (e) {}
+        if ($("seat-rows")) $("seat-rows").value = seating.rows;
+        if ($("seat-cols")) $("seat-cols").value = seating.cols;
+        renderSeating();
+      }
+    }, e => {});
   }
 
   // 학생마다 자기 events 하위 컬렉션을 구독해서 합칩니다.
