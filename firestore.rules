@@ -14,14 +14,16 @@ service cloud.firestore {
     }
 
     match /students/{uid} {
-      // 학생은 자기 문서만 읽기/쓰기, 관리자는 모든 학생 문서 읽기 가능
-      allow read:  if isAdmin() || isOwner(uid);
-      allow write: if isOwner(uid);
+      // 학생은 자기 문서만 읽기/쓰기, 관리자는 모든 학생 문서 읽기 + 삭제 가능
+      allow read:   if isAdmin() || isOwner(uid);
+      allow write:  if isOwner(uid);
+      allow delete: if isAdmin() || isOwner(uid);
 
       // events / practice / liveState 등 모든 하위 문서도 동일 규칙
       match /{document=**} {
-        allow read:  if isAdmin() || isOwner(uid);
-        allow write: if isOwner(uid);
+        allow read:   if isAdmin() || isOwner(uid);
+        allow write:  if isOwner(uid);
+        allow delete: if isAdmin() || isOwner(uid);
       }
     }
 
