@@ -60,3 +60,11 @@
 .d-table td:nth-child(2) b { color: var(--pos); }
 .d-event { font-size: 0.84rem; padding: 5px 4px; border-bottom: 1px dashed rgba(91,138,163,.2); }
 .d-event-time { color: var(--muted); font-size: 0.74rem; margin-right: 6px; }
+
+/* 학생 삭제 버튼 (상세창) */
+.d-actions { margin-top: 22px; text-align: right; }
+.d-del-btn {
+  background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;
+  padding: 9px 16px; border-radius: 12px; font-weight: 800; cursor: pointer;
+}
+.d-del-btn:hover { background: #fecaca; }

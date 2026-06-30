@@ -220,8 +220,11 @@
       '<h3 class="detail-h3">✏️ 선택한 문장 <span id="d-selcount"></span></h3>' +
       '<div id="d-selected" class="d-practice">불러오는 중...</div>' +
       '<h3 class="detail-h3">⚡ 최근 행동</h3>' +
-      '<div id="d-events" class="d-events">불러오는 중...</div>';
+      '<div id="d-events" class="d-events">불러오는 중...</div>' +
+      '<div class="d-actions"><button id="d-delete" class="d-del-btn">🗑️ 이 학생 대시보드에서 삭제</button></div>';
     $("detail").classList.remove("hidden");
+    const del = $("d-delete");
+    if (del) del.onclick = () => deleteStudent(uid, s.name || "학생");
 
     detailUnsubs.push(
       db.collection("students").doc(uid).collection("practice").orderBy("updatedAt", "desc")
@@ -281,6 +284,36 @@
   }
 
   function closeDetailSubs() { detailUnsubs.forEach(u => { try { u(); } catch (e) {} }); detailUnsubs = []; detailUid = null; }
+
+  // 학생을 대시보드(Firestore)에서 삭제 — 하위 events/practice까지 정리
+  async function deleteStudent(uid, name) {
+    if (!confirm("'" + name + "' 학생을 대시보드에서 삭제할까요?\n(연습 기록·활동도 함께 지워집니다. 학생이 다시 로그인하면 새로 생겨요.)")) return;
+    const sref = db.collection("students").doc(uid);
+    // 하위 컬렉션 일괄 삭제(400개씩 반복)
+    for (const sub of ["practice", "events"]) {
+      try {
+        while (true) {
+          const snap = await sref.collection(sub).limit(400).get();
+          if (snap.empty) break;
+          const batch = db.batch();
+          snap.forEach(d => batch.delete(d.ref));
+          await batch.commit();
+          if (snap.size < 400) break;
+        }
+      } catch (e) { /* 권한/네트워크 무시 */ }
+    }
+    try { await sref.delete(); } catch (e) {}
+    // 자리에서도 제거
+    let changed = false;
+    Object.keys(seating.seats).forEach(k => { if (seating.seats[k] === uid) { delete seating.seats[k]; changed = true; } });
+    if (changed) saveSeating();
+    delete students[uid];
+    delete feedEvents[uid];
+    if (feedUnsubs[uid]) { try { feedUnsubs[uid](); } catch (e) {} delete feedUnsubs[uid]; }
+    $("detail").classList.add("hidden");
+    closeDetailSubs();
+    renderGrid(); renderSummary(); renderSeating();
+  }
   $("detail-close").addEventListener("click", () => { $("detail").classList.add("hidden"); closeDetailSubs(); });
   $("detail").addEventListener("click", e => { if (e.target.id === "detail") { $("detail").classList.add("hidden"); closeDetailSubs(); } });
 
