@@ -88,7 +88,8 @@ body.seat-editing .seat-edit-only { display: inline-flex; }
 
 /* ===== 레이아웃: 자리 보기=꽉차게 / 목록 보기=옆에 실시간 활동 ===== */
 .dash-main { grid-template-columns: 1fr 320px; }       /* 목록 보기 */
-body.seat-mode .dash-main { grid-template-columns: 1fr; } /* 자리 보기 */
+/* 자리 보기는 화면 전체 폭 사용(가운데 1200px 제한 해제) */
+body.seat-mode .dash-main { grid-template-columns: 1fr; max-width: none; }
 
 /* 목록 보기의 활동 피드 */
 #feed-col .feed { max-height: 80vh; }
